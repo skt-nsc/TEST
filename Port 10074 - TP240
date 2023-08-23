@@ -1,0 +1,5 @@
+TP240 Mitel Phone System
+Port: 10074
+Proto: UDP
+Data Amplification factor: ~8492 using 'call.startblast 2000 3'
+Reflector count: ~1700
