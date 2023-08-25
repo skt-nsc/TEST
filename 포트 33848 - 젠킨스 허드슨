@@ -1,0 +1,27 @@
+Jenkins(Hudson Agent) CI 서버 검색
+포트: 33848
+프로토: UDP
+증폭 인자: ~5-8x
+반사경 개수: ~2,200개(2021년 3월), 2020년 4분기 16,900개에서 감소
+Jenkins에는 인증되지 않은 UDP를 통해 버전, ID 및 URL 메타데이터를 전송하는 기본 검색 메커니즘이 있습니다.
+CVE-2020-2100 에 할당된 이 문제는 UDP 연결에 의해서만 발생하며 이 메타데이터 응답에는 페이로드 바이트가 필요하지 않습니다.
+문서 링크 1을 참조하세요.
+일부 설치는 다르게 반응하며 일부는 및 만 version사용 url합니다 server-id. 다른 사람들은 소유자에 의해 수정되었으며 앞서 언급한 모든 플러스 swarmID와 slave-port.
+전체 응답 예시(보통 200바이트 이상):
+<hudson><version>***</version><url>***</url><server-id>***</server-id><slave-port>***</slave-port><swarm>***</swarm></hudson>
+요청/응답 예시
+요청: 0바이트(\n여기서는 netcat을 강제로 전송하기 위한 것임)
+
+> ~# echo -ne '\n'|nc -u 85.214.104.48 33848 -w1
+응답: 평균 140바이트(앞서 설명한 것과 다름)
+
+아스키:<hudson><version>2.193</version><url>http://vserver.wagar.de:8082/</url><server-id>67a6f6f1f0029dda390dac030c35777d</server-id><slave-port>36532</slave-port></hudson>
+원시 바이트(ASCII 문자 공간만 해당):3c687564736f6e3e3c76657273696f6e3e322e3139333c2f76657273696f6e3e3c75726c3e687474703a2f2f767365727665722e77616761722e64653a383038322f3c2f75726c3e3c7365727665722d69643e36376136663666316630303239646461333930646163303330633335373737643c2f7365727665722d69643e3c736c6176652d706f72743e33363533323c2f736c6176652d706f72743e3c2f687564736f6e3e
+선적 서류 비치
+Jenkins 보안 권고(CVE-2020-2100) - https://jenkins.io/security/advisory/2020-01-29/#SECURITY-1641
+Jenkins 보안 - https://wiki.jenkins.io/display/JENKINS/Securing+Jenkins
+완화
+Jenkins 마스터와 에이전트를 버전 2.219(LTS 2.204.2) 이상으로 업데이트하세요.
+또는 시스템 변수(Jenkins 시작 명령줄 java -D*option_here* -jar jenkins.war) 를 hudson.udp동일하게 설정합니다 -1. 뿐만 아니라 hudson.DNSMultiCast.disabled사실입니다.
+예 java -Dhudson.udp=-1 -jar jenkins.war.
+노골적으로 ACL 블록 <hudson>.*</hudson>ASCII 문자열 또는 sport 33848(수정 사항은 어쨌든 기본적으로 비활성화하는 것이므로).
